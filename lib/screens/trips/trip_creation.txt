@@ -1,0 +1,201 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../models/trip_model.dart';
+import '../services/trip_service.dart';
+
+class TripCreationScreen extends StatefulWidget {
+  const TripCreationScreen({super.key});
+
+  @override
+  _TripCreationScreenState createState() => _TripCreationScreenState();
+}
+
+class _TripCreationScreenState extends State<TripCreationScreen> {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController destinationController = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
+  final TextEditingController dateGoingController = TextEditingController();
+  final TextEditingController durationController = TextEditingController();
+
+  DateTime? dateOfGoing;
+  String selectedDurationUnit = "Days"; // Options: "Days" or "Hours"
+
+  // Opens a date picker and updates the dateGoingController with the selected date.
+  Future<void> _selectDate({required TextEditingController controller}) async {
+    DateTime initialDate = DateTime.now();
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate != null) {
+      setState(() {
+        dateOfGoing = pickedDate;
+        controller.text = "${pickedDate.toLocal()}".split(' ')[0]; // Format: YYYY-MM-DD
+      });
+    }
+  }
+
+  // Shows a preview dialog with all entered details and the image fetched from Wikipedia.
+  Future<void> _previewTrip() async {
+    if (nameController.text.isEmpty ||
+        destinationController.text.isEmpty ||
+        locationController.text.isEmpty ||
+        dateOfGoing == null ||
+        durationController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill in all fields")),
+      );
+      return;
+    }
+
+    // Fetch the image URL from Wikipedia based on the destination.
+    String imageUrl = await TripService.fetchTripImage(destinationController.text.trim());
+    
+    // Get organizer info from Firebase Auth.
+    User? user = FirebaseAuth.instance.currentUser;
+    String organizerId = user?.uid ?? 'anonymous';
+    String organizerEmail = user?.email ?? 'anonymous@example.com';
+
+    // Parse the duration value.
+    int duration = int.tryParse(durationController.text) ?? 0;
+
+    // Build a Trip object with the preview details.
+    Trip previewTrip = Trip(
+      id: DateTime.now().toString(),
+      name: nameController.text,
+      destination: destinationController.text,
+      imageUrl: imageUrl,
+      dateOfGoing: dateOfGoing!,
+      location: locationController.text,
+      organizerId: organizerId,
+      organizerEmail: organizerEmail,
+      duration: duration,
+      durationUnit: selectedDurationUnit,
+    );
+
+    // Show a preview dialog with the details and image.
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Preview Trip"),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Trip Name: ${previewTrip.name}"),
+                Text("Destination: ${previewTrip.destination}"),
+                Text("Location: ${previewTrip.location}"),
+                Text("Date of Going: ${dateGoingController.text}"),
+                Text("Duration: ${durationController.text} $selectedDurationUnit"),
+                const SizedBox(height: 10),
+                // Display the fetched image. Show an icon if loading fails.
+                Center(
+                  child: Image.network(
+                    previewTrip.imageUrl,
+                    height: 150,
+                    width: 150,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.image, size: 50);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Cancel preview
+              },
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Dismiss the preview dialog
+                _saveTrip(previewTrip);
+              },
+              child: const Text("Submit"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Saves the trip to the database.
+  Future<void> _saveTrip(Trip trip) async {
+    await TripService.addTrip(trip);
+    Navigator.pop(context, trip);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Create Trip')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Trip Name'),
+              ),
+              TextField(
+                controller: destinationController,
+                decoration: const InputDecoration(labelText: 'Destination'),
+              ),
+              TextField(
+                controller: locationController,
+                decoration: const InputDecoration(labelText: 'Location'),
+              ),
+              TextField(
+                controller: dateGoingController,
+                decoration: const InputDecoration(labelText: 'Date of Going'),
+                readOnly: true,
+                onTap: () => _selectDate(controller: dateGoingController),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: durationController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Duration'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  DropdownButton<String>(
+                    value: selectedDurationUnit,
+                    items: <String>['Days', 'Hours'].map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          selectedDurationUnit = newValue;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _previewTrip,
+                child: const Text('Preview Trip'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
