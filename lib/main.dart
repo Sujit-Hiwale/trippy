@@ -7,6 +7,7 @@ import 'screens/auth/signup.dart';
 import 'screens/home.dart';
 import 'firebase_options.dart';
 import 'theme.dart';
+import 'screens/home/start.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,13 +29,14 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
+      initialRoute: '/init',
       routes: {
         '/': (context) => const HomeScreen(),
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignupScreen(),
         '/create' : (context) => TripCreationScreen(),
         '/profile': (context) => ProfileScreen(),
+        '/init': (context) => StartPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/home') {

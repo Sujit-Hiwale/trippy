@@ -64,8 +64,10 @@ class FirebaseService {
     }
   }
 
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
   Future<User?> signInWithGoogle() async {
     try {
+      await _googleSignIn.signOut();
       final googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) return null;
 

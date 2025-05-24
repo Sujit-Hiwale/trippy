@@ -24,14 +24,18 @@ class _SignupScreenState extends State<SignupScreen> {
       _passwordController.text,
     );
     if (user != null) {
-      await _firebaseService.createUserDocument(user);
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const ProfileSetupScreen(isGoogleSignup: false)),
+        MaterialPageRoute(
+          builder: (context) => ProfileSetupScreen(
+            isGoogleSignup: false,
+            user: user,
+          ),
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User Exists! Please Login')),
+        const SnackBar(content: Text('User exists! Please log in.')),
       );
     }
     setState(() => _loading = false);
@@ -41,11 +45,20 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _loading = true);
     User? user = await _firebaseService.signInWithGoogle();
     if (user != null) {
-      await _firebaseService.createUserDocument(user);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ProfileSetupScreen(isGoogleSignup: true)),
-      );
+      bool exists = await _firebaseService.checkIfUserExists(user.uid);
+      if (!exists) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProfileSetupScreen(
+              isGoogleSignup: true,
+              user: user,
+            ),
+          ),
+        );
+      } else {
+        Navigator.pushReplacementNamed(context, '/');
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Google sign-up failed! Please try again.')),
@@ -58,8 +71,11 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.background,
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/background/sign.jpg'),
+            fit: BoxFit.cover,
+          ),
         ),
         child: Center(
           child: SingleChildScrollView(
@@ -69,50 +85,67 @@ class _SignupScreenState extends State<SignupScreen> {
                 margin: const EdgeInsets.all(16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 8,
+                color: Colors.white.withOpacity(0.9),
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Sign Up',
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Sign Up',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
                       const SizedBox(height: 16),
                       TextField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
+                        style: const TextStyle(color: Colors.black),
                         decoration: const InputDecoration(
                           labelText: 'Email',
-                          prefixIcon: Icon(Icons.email),
+                          labelStyle: TextStyle(color: Colors.black),
+                          prefixIcon: Icon(Icons.email, color: Colors.black),
                         ),
                       ),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _passwordController,
+                        obscureText: true,
+                        style: const TextStyle(color: Colors.black),
                         decoration: const InputDecoration(
                           labelText: 'Password',
-                          prefixIcon: Icon(Icons.lock),
+                          labelStyle: TextStyle(color: Colors.black),
+                          prefixIcon: Icon(Icons.lock, color: Colors.black),
                         ),
-                        obscureText: true,
                       ),
                       const SizedBox(height: 16),
                       _loading
                           ? const CircularProgressIndicator()
                           : ElevatedButton(
                         onPressed: _signupWithEmail,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                        ),
                         child: const Text('Sign Up'),
                       ),
                       const SizedBox(height: 8),
-                      _loading
-                          ? Container()
-                          : SignInButton(
-                        Buttons.Google,
-                        text: 'Sign up with Google',
-                        onPressed: _signupWithGoogle,
-                      ),
+                      if (!_loading)
+                        SignInButton(
+                          Buttons.Google,
+                          text: 'Sign up with Google',
+                          onPressed: _signupWithGoogle,
+                        ),
                       const SizedBox(height: 8),
                       TextButton(
                         onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-                        child: const Text('Already have an account? Login'),
+                        child: const Text(
+                          'Already have an account? Login',
+                          style: TextStyle(color: Colors.blue),
+                        ),
                       ),
                     ],
                   ),

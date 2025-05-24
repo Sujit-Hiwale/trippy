@@ -1,41 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../services/firebase_service.dart';
+import 'avatar.dart'; // Your avatar selection screen
 
 class ProfileSetupScreen extends StatefulWidget {
   final bool isGoogleSignup;
+  final User user;
 
-  const ProfileSetupScreen({Key? key, required this.isGoogleSignup}) : super(key: key);
+  const ProfileSetupScreen({Key? key, required this.isGoogleSignup, required this.user}) : super(key: key);
 
   @override
   _ProfileSetupScreenState createState() => _ProfileSetupScreenState();
 }
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseService _firebaseService = FirebaseService();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
-  String? _profilePicUrl;
+
+  String? _selectedAvatar;
   bool _loading = false;
 
-  Future<void> _saveProfile() async {
+  void _selectAvatarFromScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AvatarSelectionScreen(
+          onAvatarSelected: (selectedAvatar) {
+            setState(() {
+              _selectedAvatar = selectedAvatar;
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _createUserDocIfNotExists() async {
+    final userDoc = FirebaseFirestore.instance.collection('users').doc(widget.user.uid);
+    final docSnapshot = await userDoc.get();
+    if (!docSnapshot.exists) {
+      await userDoc.set({
+        'email': widget.user.email ?? '',
+        'username': '',
+        'bio': '',
+        'profilePic': '',
+      });
+    }
+  }
+
+  Future<void> _saveFullProfile() async {
     setState(() => _loading = true);
-    User? user = _auth.currentUser;
-    if (user == null) return;
 
     try {
       if (widget.isGoogleSignup) {
-        await user.updatePassword(_passwordController.text.trim());
+        final password = _passwordController.text.trim();
+        if (password.isEmpty) {
+          throw Exception("Password is required for Google sign-up.");
+        }
+        await widget.user.updatePassword(password);
       }
 
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+      await _createUserDocIfNotExists();
+
+      await FirebaseFirestore.instance.collection('users').doc(widget.user.uid).update({
+        'username': _usernameController.text.trim(),
         'bio': _bioController.text.trim(),
-        'profilePic': _profilePicUrl ?? "",
+        'profilePic': _selectedAvatar ?? 'assets/avatars/default.png',
       });
 
-      Navigator.pushReplacementNamed(context, '/');
+      Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error updating profile: $e')),
@@ -45,32 +79,26 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     }
   }
 
-  Future<void> _uploadProfilePicture() async {
-    String? imageUrl = await _firebaseService.uploadProfilePicture(_auth.currentUser!.uid);
-    if (imageUrl != null) {
-      setState(() => _profilePicUrl = imageUrl);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to upload image!')),
-      );
-    }
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    _bioController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF2196F3), Color(0xFF21CBF3)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        color: colorScheme.background,
         child: Center(
           child: SingleChildScrollView(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 350),
+              constraints: const BoxConstraints(maxWidth: 400),
               child: Card(
                 margin: const EdgeInsets.all(16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -80,20 +108,62 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
+                      Text(
                         'Set Up Your Profile',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: colorScheme.onBackground,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 16),
+
+                      Text(
+                        'Avatar',
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 12),
+
+                      GestureDetector(
+                        onTap: _selectAvatarFromScreen,
+                        child: CircleAvatar(
+                          radius: 40,
+                          backgroundImage: _selectedAvatar != null
+                              ? AssetImage(_selectedAvatar!)
+                              : const AssetImage('assets/avatars/default.png'),
+                          backgroundColor: Colors.grey[300],
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      TextButton.icon(
+                        onPressed: _selectAvatarFromScreen,
+                        icon: const Icon(Icons.edit),
+                        label: const Text('Choose Avatar'),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      TextField(
+                        controller: _usernameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Username',
+                          prefixIcon: Icon(Icons.person),
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
 
                       if (widget.isGoogleSignup) ...[
                         TextField(
                           controller: _passwordController,
+                          obscureText: true,
                           decoration: const InputDecoration(
                             labelText: 'Set Password',
                             prefixIcon: Icon(Icons.lock),
+                            border: OutlineInputBorder(),
                           ),
-                          obscureText: true,
                         ),
                         const SizedBox(height: 8),
                       ],
@@ -103,39 +173,20 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Your Bio',
                           prefixIcon: Icon(Icons.person_outline),
+                          border: OutlineInputBorder(),
                         ),
                       ),
-                      const SizedBox(height: 8),
 
-                      // Profile Picture Preview
-                      if (_profilePicUrl != null)
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundImage: NetworkImage(_profilePicUrl!),
-                        ),
-                      const SizedBox(height: 8),
-
-                      ElevatedButton(
-                        onPressed: _uploadProfilePicture,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueAccent,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text('Upload Profile Picture'),
-                      ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 24),
 
                       _loading
                           ? const CircularProgressIndicator()
-                          : ElevatedButton(
-                        onPressed: _saveProfile,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          textStyle: const TextStyle(fontSize: 16),
+                          : SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _saveFullProfile,
+                          child: const Text('Save & Continue'),
                         ),
-                        child: const Text('Save & Continue'),
                       ),
                     ],
                   ),

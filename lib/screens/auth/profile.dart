@@ -72,7 +72,7 @@ class ProfileScreen extends StatelessWidget {
                 CircleAvatar(
                   radius: 60,
                   backgroundImage: userData['profilePic'] != null && userData['profilePic'] != ""
-                      ? NetworkImage(userData['profilePic'])
+                      ? AssetImage(userData['profilePic'])
                       : const AssetImage("assets/default_profile.png") as ImageProvider,
                   backgroundColor: Colors.transparent,
                 ),

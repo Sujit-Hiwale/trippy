@@ -42,7 +42,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!userExists) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const ProfileSetupScreen(isGoogleSignup: true)),
+          MaterialPageRoute(
+            builder: (context) => ProfileSetupScreen(isGoogleSignup: true, user: user),
+          ),
         );
       } else {
         Navigator.pushReplacementNamed(context, '/');
@@ -57,13 +59,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.background,
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/background/sign.jpg'), // Your background image here
+            fit: BoxFit.cover,
+          ),
         ),
         child: Center(
           child: SingleChildScrollView(
@@ -73,57 +75,66 @@ class _LoginScreenState extends State<LoginScreen> {
                 margin: const EdgeInsets.all(16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 8,
+                color: Colors.white.withOpacity(0.9),
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
+                      const Text(
                         'Login',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          color: colorScheme.onBackground,
+                        style: TextStyle(
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
                       ),
                       const SizedBox(height: 16),
                       TextField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
+                        style: const TextStyle(color: Colors.black),
+                        decoration: const InputDecoration(
                           labelText: 'Email',
-                          prefixIcon: const Icon(Icons.email),
+                          labelStyle: TextStyle(color: Colors.black),
+                          prefixIcon: Icon(Icons.email, color: Colors.black),
                         ),
                       ),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _passwordController,
+                        obscureText: true,
+                        style: const TextStyle(color: Colors.black),
                         decoration: const InputDecoration(
                           labelText: 'Password',
-                          prefixIcon: Icon(Icons.lock),
+                          labelStyle: TextStyle(color: Colors.black),
+                          prefixIcon: Icon(Icons.lock, color: Colors.black),
                         ),
-                        obscureText: true,
                       ),
                       const SizedBox(height: 16),
                       _loading
                           ? const CircularProgressIndicator()
                           : ElevatedButton(
                         onPressed: _loginWithEmail,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                        ),
                         child: const Text('Login'),
                       ),
                       const SizedBox(height: 8),
-                      _loading
-                          ? Container()
-                          : SignInButton(
-                        Buttons.Google,
-                        text: 'Sign in with Google',
-                        onPressed: _loginWithGoogle,
-                      ),
+                      if (!_loading)
+                        SignInButton(
+                          Buttons.Google,
+                          text: 'Sign in with Google',
+                          onPressed: _loginWithGoogle,
+                        ),
                       const SizedBox(height: 8),
                       TextButton(
                         onPressed: () => Navigator.pushReplacementNamed(context, '/signup'),
-                        child: Text(
+                        child: const Text(
                           'Don\'t have an account? Sign Up',
-                          style: TextStyle(color: colorScheme.primary),
+                          style: TextStyle(color: Colors.blue),
                         ),
                       ),
                     ],
