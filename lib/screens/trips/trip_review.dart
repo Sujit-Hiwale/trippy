@@ -15,9 +15,13 @@ class TripReviewScreen extends StatefulWidget {
 }
 
 class _TripReviewScreenState extends State<TripReviewScreen> {
+  bool _isLoading = false;
+
   void _confirmTrip() async {
+    setState(() => _isLoading = true);
     await TripService.addTrip(widget.trip);
     if (!mounted) return;
+    setState(() => _isLoading = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('🎉 Trip successfully added!')),
     );
@@ -108,7 +112,9 @@ class _TripReviewScreenState extends State<TripReviewScreen> {
                               style: const TextStyle(fontSize: 16, color: Colors.white70),
                             ),
                             const SizedBox(height: 40),
-                            Row(
+                            _isLoading
+                                ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                                : Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
                                 ElevatedButton.icon(

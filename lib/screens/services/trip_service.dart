@@ -6,35 +6,12 @@ import '../models/trip_model.dart';
 class TripService {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Fetch Wikipedia image based on the trip name.
-  static Future<String> fetchTripImage(String tripName) async {
-    final Uri url = Uri.parse(
-      'https://cors-anywhere.herokuapp.com/https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&pithumbsize=500&titles=$tripName',
-    );
-
-    final response = await http.get(url);
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      var pages = data['query']['pages'];
-      if (pages.isNotEmpty) {
-        var firstPage = pages.values.first;
-        if (firstPage.containsKey('thumbnail')) {
-          return firstPage['thumbnail']['source'];
-        }
-      }
-    }
-    return 'https://upload.wikimedia.org/wikipedia/commons/6/65/No-Image-Placeholder.svg';
-  }
-
   // Add trip to Firestore with all details.
   static Future<void> addTrip(Trip trip) async {
-    // Fetch the image from Wikipedia using the trip name.
-    String imageUrl = await fetchTripImage(trip.name);
-
     await _db.collection('trips').doc(trip.id).set({
       'name': trip.name,
       'destination': trip.destination,
-      'imageUrl': imageUrl,
+      'imageUrl': trip.imageUrl,
       // Store the date as a Firestore Timestamp.
       'dateOfGoing': Timestamp.fromDate(trip.dateOfGoing),
       'location': trip.location,
@@ -43,6 +20,8 @@ class TripService {
       'duration': trip.duration,
       'durationUnit': trip.durationUnit,
       'teamMembers': trip.teamMembers,
+      'description': trip.description,
+      'type': trip.type,
     });
 
     print("Trip added: ${trip.name}, Destination: ${trip.destination}");
@@ -81,6 +60,8 @@ class TripService {
           teamMembers: (data['teamMembers'] is List)
               ? List<String>.from(data['teamMembers'])
               : [],
+          description: data['description'] ?? '',
+          type: data['type'],
         );
       } catch (e, stacktrace) {
         print("Error parsing trip document ${doc.id}: $e");

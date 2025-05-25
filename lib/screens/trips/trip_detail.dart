@@ -139,10 +139,17 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                 ),
                 Positioned(
                   top: 40,
-                  left: 10,
+                  right: 10,
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.message_rounded, color: Colors.white),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TripChatScreen(tripName: trip.name),
+                        ),
+                      );
+                    },
                   ),
                 ),
                 Positioned(

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Trip {
   final String id;
   final String name;
@@ -10,7 +12,7 @@ class Trip {
   final int duration;
   final String durationUnit;
   String? description;
-  final String? type;
+  final String type;
   List<String> teamMembers;
 
   Trip({
@@ -26,6 +28,23 @@ class Trip {
     required this.durationUnit,
     required this.teamMembers,
     this.description,
-    this.type,
+    required this.type,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'destination': destination,
+      'imageUrl': imageUrl,
+      'dateOfGoing': Timestamp.fromDate(dateOfGoing),
+      'location': location,
+      'organizerId': organizerId,
+      'organizerEmail': organizerEmail,
+      'duration': duration,
+      'durationUnit': durationUnit,
+      'teamMembers': teamMembers,
+      'description': description,
+      'type': type,
+    };
+  }
 }

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/trip_model.dart';
 import '../services/trip_service.dart';
 import '../widgets/trip_card.dart';
-import 'trip_creation.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart';
 
 class TripListingScreen extends StatefulWidget {
   const TripListingScreen({super.key});
@@ -14,7 +13,7 @@ class TripListingScreen extends StatefulWidget {
 
 class _TripListingScreenState extends State<TripListingScreen> {
   List<Trip> trips = [];
-  List<Trip> filteredTrips = [];
+  Map<String, List<Trip>> groupedTrips = {};
   bool isLoading = true;
   final TextEditingController searchController = TextEditingController();
 
@@ -29,30 +28,41 @@ class _TripListingScreenState extends State<TripListingScreen> {
     List<Trip> fetchedTrips = await TripService.fetchTrips();
     setState(() {
       trips = fetchedTrips;
-      filteredTrips = fetchedTrips;
+      _groupTrips();
       isLoading = false;
     });
   }
 
-  void _filterTrips() {
+  void _groupTrips() {
+    groupedTrips.clear();
     String query = searchController.text.toLowerCase();
+
+    for (var trip in trips) {
+      // Filter trips by search query
+      if (query.isNotEmpty &&
+          !trip.name.toLowerCase().contains(query) &&
+          !trip.destination.toLowerCase().contains(query)) {
+        continue;
+      }
+
+      // Group by trip typer
+      groupedTrips.putIfAbsent(trip.type, () => []);
+      groupedTrips[trip.type]!.add(trip);
+    }
+  }
+
+  void _filterTrips() {
     setState(() {
-      filteredTrips = trips
-          .where((trip) =>
-      trip.name.toLowerCase().contains(query) ||
-          trip.destination.toLowerCase().contains(query))
-          .toList();
+      _groupTrips();
     });
   }
 
-  void _navigateToCreateTrip() async {
+  void _navigateToCreateTrip() {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      // Redirect to login if user is not signed in
       Navigator.pushNamed(context, '/login');
     } else {
-      // Redirect to trip creation if user is signed in
       Navigator.pushNamed(context, '/create');
     }
   }
@@ -62,6 +72,7 @@ class _TripListingScreenState extends State<TripListingScreen> {
     return Scaffold(
       body: Column(
         children: [
+          // Search Bar
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: TextField(
@@ -73,37 +84,45 @@ class _TripListingScreenState extends State<TripListingScreen> {
               ),
             ),
           ),
+          // Trip List
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : filteredTrips.isEmpty
+                : groupedTrips.isEmpty
                 ? const Center(child: Text('No trips found'))
-                : LayoutBuilder(
-              builder: (context, constraints) {
-                const double maxCardSize = 300; // Good for web and desktop
-                int crossAxisCount = (constraints.maxWidth / maxCardSize).floor();
-                if (crossAxisCount < 1) crossAxisCount = 1;
-
-                double cardSize = constraints.maxWidth / crossAxisCount;
-
-                return GridView.builder(
-                  padding: const EdgeInsets.all(10),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 1, // Ensures square card (width = height)
-                  ),
-                  itemCount: filteredTrips.length,
-                  itemBuilder: (context, index) {
-                    return SizedBox(
-                      width: cardSize,
-                      height: cardSize,
-                      child: TripCard(trip: filteredTrips[index]),
-                    );
-                  },
+                : ListView(
+              padding: const EdgeInsets.only(bottom: 80),
+              children: groupedTrips.entries.map((entry) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Type Title
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      child: Text(
+                        entry.key, // Trip type
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    // Horizontal Scroll Row
+                    SizedBox(
+                      height: 250,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: entry.value.length,
+                        itemBuilder: (context, index) {
+                          final trip = entry.value[index];
+                          return Container(
+                            width: 200,
+                            margin: const EdgeInsets.symmetric(horizontal: 8),
+                            child: TripCard(trip: trip),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 );
-              },
+              }).toList(),
             ),
           ),
         ],

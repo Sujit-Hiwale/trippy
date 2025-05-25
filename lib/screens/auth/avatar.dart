@@ -1,19 +1,37 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
-class AvatarSelectionScreen extends StatelessWidget {
+class AvatarSelectionScreen extends StatefulWidget {
   final void Function(String) onAvatarSelected;
 
-  AvatarSelectionScreen({required this.onAvatarSelected, Key? key}) : super(key: key);
+  const AvatarSelectionScreen({required this.onAvatarSelected, Key? key}) : super(key: key);
 
-  // Example avatar image asset paths
-  final List<String> avatars = [
-    'assets/avatars/maleCasual.png',
-    'assets/avatars/femaleCasual.png',
-    'assets/avatars/maleFormal.png',
-    'assets/avatars/femaleFormal.png',
-    'assets/avatars/maleSport.png',
-    'assets/avatars/femaleSport.png',
-  ];
+  @override
+  State<AvatarSelectionScreen> createState() => _AvatarSelectionScreenState();
+}
+
+class _AvatarSelectionScreenState extends State<AvatarSelectionScreen> {
+  List<String> avatars = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAvatars();
+  }
+
+  Future<void> _loadAvatars() async {
+    final manifestContent = await rootBundle.loadString('AssetManifest.json');
+    final Map<String, dynamic> manifestMap = json.decode(manifestContent);
+
+    final avatarPaths = manifestMap.keys
+        .where((String key) => key.startsWith('assets/avatars/') && (key.endsWith('.png') || key.endsWith('.jpg')))
+        .toList();
+
+    setState(() {
+      avatars = avatarPaths;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,11 +39,13 @@ class AvatarSelectionScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Select Avatar'),
       ),
-      body: GridView.builder(
+      body: avatars.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : GridView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: avatars.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3, // 3 avatars per row
+          crossAxisCount: 3,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
         ),
@@ -33,7 +53,7 @@ class AvatarSelectionScreen extends StatelessWidget {
           final avatarPath = avatars[index];
           return GestureDetector(
             onTap: () {
-              onAvatarSelected(avatarPath);
+              widget.onAvatarSelected(avatarPath);
               Navigator.pop(context);
             },
             child: CircleAvatar(
