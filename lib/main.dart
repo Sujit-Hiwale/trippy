@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:trippy/screens/auth/login.dart';
+import 'package:trippy/screens/cities/cityListing.dart';
 import 'package:trippy/screens/trips/trip_creation.dart';
 import 'screens/auth/profile.dart';
 import 'screens/auth/signup.dart';
@@ -8,6 +9,7 @@ import 'screens/home.dart';
 import 'firebase_options.dart';
 import 'theme.dart';
 import 'screens/home/start.dart';
+import 'screens/cities/cityListing.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,7 +31,7 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
-      initialRoute: '/init',
+      initialRoute: '/cities',
       routes: {
         '/': (context) => const HomeScreen(),
         '/login': (context) => LoginScreen(),
@@ -37,6 +39,7 @@ class MyApp extends StatelessWidget {
         '/create' : (context) => TripCreationScreen(),
         '/profile': (context) => ProfileScreen(),
         '/init': (context) => StartPage(),
+        '/cities': (context) => const CityListingPage(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/home') {

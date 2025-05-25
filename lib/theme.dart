@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 class AppTheme {
   // Main brand color
   static const Color primaryColor = Color(0xFF4A90E2);
+  static Color lightCardBoxColor = Colors.white;
+  static Color darkCardBoxColor = Colors.grey;
 
   // Light theme
   static final ThemeData lightTheme = ThemeData(
