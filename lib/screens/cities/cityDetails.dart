@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/city.dart';
+import '../trips/trip_creation.dart';
 
 class CityDetailsPage extends StatefulWidget {
   final City city;
@@ -215,11 +216,15 @@ class _CityDetailsPageState extends State<CityDetailsPage> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Trip planning coming soon!'),
-                                duration: Duration(seconds: 1),
-                              ),
+                            Navigator.pushNamed(
+                              context,
+                              '/create',
+                              arguments: {
+                                'initialName': 'Trip to ${widget.city.name}',
+                                'initialDestination': '${widget.city.name}, ${widget.city.country}',
+                                'initialImageUrl': widget.city.imageUrl,
+                                'initialDescription': widget.city.description,
+                              },
                             );
                           },
                           style: ElevatedButton.styleFrom(
@@ -244,11 +249,15 @@ class _CityDetailsPageState extends State<CityDetailsPage> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Booking feature coming soon!'),
-                                duration: Duration(seconds: 1),
-                              ),
+                            Navigator.pushNamed(
+                              context,
+                              '/create',
+                              arguments: {
+                                'initialName': 'Trip to ${widget.city.name}',
+                                'initialDestination': '${widget.city.name}, ${widget.city.country}',
+                                'initialImageUrl': widget.city.imageUrl,
+                                'initialDescription': widget.city.description,
+                              },
                             );
                           },
                           style: ElevatedButton.styleFrom(

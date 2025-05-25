@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:trippy/screens/auth/login.dart';
@@ -10,6 +11,7 @@ import 'firebase_options.dart';
 import 'theme.dart';
 import 'screens/home/start.dart';
 import 'screens/cities/cityListing.dart';
+import 'screens/cities/home.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,17 +33,36 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
-      initialRoute: '/cities',
+      initialRoute: '/init',
       routes: {
         '/': (context) => const HomeScreen(),
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignupScreen(),
-        '/create' : (context) => TripCreationScreen(),
-        '/profile': (context) => ProfileScreen(),
         '/init': (context) => StartPage(),
         '/cities': (context) => const CityListingPage(),
       },
       onGenerateRoute: (settings) {
+        final user = FirebaseAuth.instance.currentUser;
+        if (settings.name == '/create' || settings.name == '/profile') {
+          if (user == null) {
+            return MaterialPageRoute(builder: (context) => LoginScreen());
+          }
+        }
+        if (settings.name == '/create') {
+          final args = settings.arguments as Map<String, dynamic>?;
+
+          return MaterialPageRoute(
+            builder: (context) => TripCreationScreen(
+              initialName: args?['initialName'] ?? '',
+              initialDestination: args?['initialDestination'] ?? '',
+              initialImageUrl: args?['initialImageUrl'] ?? '',
+              initialDescription: args?['initialDescription'] ?? '',
+            ),
+          );
+        }
+        if (settings.name == '/profile') {
+          return MaterialPageRoute(builder: (context) => ProfileScreen());
+        }
         if (settings.name == '/home') {
           return MaterialPageRoute(builder: (context) => const HomeScreen());
         }

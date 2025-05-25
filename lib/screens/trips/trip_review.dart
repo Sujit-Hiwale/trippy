@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/trip_model.dart';
@@ -17,122 +19,152 @@ class _TripReviewScreenState extends State<TripReviewScreen> {
     await TripService.addTrip(widget.trip);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Trip successfully added!')),
+      const SnackBar(content: Text('🎉 Trip successfully added!')),
     );
     Navigator.pop(context, true);
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Review Trip'),
-        centerTitle: true,
+      extendBodyBehindAppBar: true,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(0),
+        child: Container(),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Image
-              SizedBox(
-                height: 220,
-                child: Image.network(
-                  widget.trip.imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: Colors.grey.shade300,
-                    alignment: Alignment.center,
-                    child: const Text('Image failed to load'),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: NetworkImage(widget.trip.imageUrl),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              Colors.black.withOpacity(0.35),
+              BlendMode.darken,
+            ),
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Review Trip',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
+                    ),
                   ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(widget.trip.name,
-                        style: textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on_outlined, size: 20),
-                        const SizedBox(width: 6),
-                        Text(widget.trip.destination, style: textTheme.titleMedium),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        const Icon(Icons.calendar_today_outlined, size: 18),
-                        const SizedBox(width: 6),
-                        Text(
-                          DateFormat('yyyy-MM-dd').format(widget.trip.dateOfGoing),
-                          style: textTheme.bodyLarge,
+                  const SizedBox(height: 24),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white30),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.access_time_outlined, size: 18),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${widget.trip.duration} ${widget.trip.durationUnit}',
-                          style: textTheme.bodyLarge,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-
-                    // Buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: () => Navigator.pop(context, false),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.secondaryContainer,
-                            foregroundColor: theme.colorScheme.onSecondaryContainer,
-                            minimumSize: const Size(140, 48),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              widget.trip.name,
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 1.2,
+                              ),
                             ),
-                          ),
-                          icon: const Icon(Icons.edit_outlined),
-                          label: const Text('Edit'),
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: _confirmTrip,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primary,
-                            foregroundColor: theme.colorScheme.onPrimary,
-                            minimumSize: const Size(180, 48),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                            const SizedBox(height: 20),
+                            _buildInfoRow(Icons.location_on, widget.trip.destination),
+                            const SizedBox(height: 16),
+                            _buildInfoRow(
+                              Icons.calendar_today,
+                              DateFormat('yyyy-MM-dd').format(widget.trip.dateOfGoing),
                             ),
-                            elevation: 4,
-                          ),
-                          icon: const Icon(Icons.check_circle_outline),
-                          label: const Text('Confirm & Submit'),
+                            const SizedBox(height: 16),
+                            _buildInfoRow(
+                              Icons.schedule,
+                              '${widget.trip.duration} ${widget.trip.durationUnit}',
+                            ),
+                            const SizedBox(height: 16),
+                            _buildInfoRow(
+                              Icons.category,
+                              widget.trip.type ?? 'N/A',
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              widget.trip.description ?? 'No description provided.',
+                              style: const TextStyle(fontSize: 16, color: Colors.white70),
+                            ),
+                            const SizedBox(height: 40),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                ElevatedButton.icon(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  icon: const Icon(Icons.edit),
+                                  label: const Text("Edit"),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white24,
+                                    foregroundColor: Colors.white,
+                                    minimumSize: const Size(130, 50),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                  ),
+                                ),
+                                ElevatedButton.icon(
+                                  onPressed: _confirmTrip,
+                                  icon: const Icon(Icons.check),
+                                  label: const Text("Confirm & Submit"),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Colors.blueAccent,
+                                    minimumSize: const Size(180, 50),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white70),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 18, color: Colors.white70),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -9,6 +9,8 @@ class Trip {
   final String organizerEmail;
   final int duration;
   final String durationUnit;
+  String? description;
+  final String? type;
   List<String> teamMembers;
 
   Trip({
@@ -23,5 +25,7 @@ class Trip {
     required this.duration,
     required this.durationUnit,
     required this.teamMembers,
+    this.description,
+    this.type,
   });
 }
