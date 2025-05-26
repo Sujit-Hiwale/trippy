@@ -13,6 +13,7 @@ import 'screens/home/start.dart';
 import 'screens/cities/cityListing.dart';
 import 'screens/cities/home.dart';
 import 'screens/home/footer.dart';
+import 'screens/auth/connections.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +43,7 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => SignupScreen(),
         '/init': (context) => StartPage(),
         '/cities': (context) => const CityListingPage(),
+        '/connections': (context) => const ConnectionsScreen(),
       },
       onGenerateRoute: (settings) {
         final user = FirebaseAuth.instance.currentUser;

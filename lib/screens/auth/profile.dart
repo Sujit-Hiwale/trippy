@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'editProfile.dart';
+import 'connections.dart';
 
 class ProfileScreen extends StatelessWidget {
   final User? user = FirebaseAuth.instance.currentUser;
@@ -113,16 +114,26 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.people, color: theme.colorScheme.primary, size: 28),
-                    const SizedBox(width: 8),
-                    Text(
-                      "${connections.length} Connections",
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                InkWell(
+                  onTap: () {
+                    Navigator.pushNamed(context, '/connections');
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.people, color: theme.colorScheme.primary, size: 28),
+                        const SizedBox(width: 8),
+                        Text(
+                          "${connections.length} Connections",
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
 
                 const SizedBox(height: 32),

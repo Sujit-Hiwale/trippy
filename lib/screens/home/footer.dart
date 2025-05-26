@@ -17,7 +17,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
   final List<Widget> _pages = [
     const CityListingPage(),
-    const SearchScreen(),
+    const TripSearchScreen(),
     const EventScreen(),
     const HomeScreen(),
   ];

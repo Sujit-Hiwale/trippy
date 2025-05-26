@@ -8,21 +8,21 @@ class EventScreen extends StatelessWidget {
       'title': 'Mountain Music Festival',
       'date': 'June 15, 2025',
       'location': 'Shimla, India',
-      'image': 'https://example.com/mountain.jpg',
+      'image': 'assets/background/mountainMusicFestival.png',
       'description': 'A weekend of folk music and nature under the stars.'
     },
     {
       'title': 'Desert Art Carnival',
       'date': 'July 10, 2025',
       'location': 'Jaisalmer, India',
-      'image': 'https://example.com/desert.jpg',
+      'image': 'assets/background/desertArtCarnival.png',
       'description': 'Experience vibrant art and culture in the golden desert.'
     },
     {
       'title': 'River Yoga Retreat',
       'date': 'August 1, 2025',
       'location': 'Rishikesh, India',
-      'image': 'https://example.com/yoga.jpg',
+      'image': 'assets/background/riverYogaRetreat.png',
       'description': 'Join us for yoga sessions by the river with expert guides.'
     },
   ];
