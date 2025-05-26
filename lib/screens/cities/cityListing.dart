@@ -1,28 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-class City {
-  final String id;
-  final String name;
-  final String description;
-  final String imageUrl;
-
-  City({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.imageUrl,
-  });
-
-  factory City.fromFirestore(Map<String, dynamic> data, String docId) {
-    return City(
-      id: docId,
-      name: data['name'] ?? 'Unknown',
-      description: data['description'] ?? '',
-      imageUrl: data['imageUrl'] ?? '',
-    );
-  }
-}
+import '../models/city.dart';
+import 'city_card.dart';
+import 'cityDetails.dart';
 
 class CityListingPage extends StatefulWidget {
   const CityListingPage({Key? key}) : super(key: key);
@@ -98,7 +78,14 @@ class _CityListingPageState extends State<CityListingPage> {
                                   Expanded(
                                     flex: 6,
                                     child: GestureDetector(
-                                      onTap: () {},
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => CityDetailsPage(city: selectedCity),
+                                          ),
+                                        );
+                                      },
                                       child: Container(
                                         margin: const EdgeInsets.only(right: 8),
                                         decoration: BoxDecoration(
@@ -193,22 +180,19 @@ class _CityListingPageState extends State<CityListingPage> {
                       ),
                     ),
 
-                    // Description
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: Text(
-                        selectedCity.description.isNotEmpty
-                            ? selectedCity.description
-                            : 'No description available for this city.',
-                        textAlign: TextAlign.left,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
-                          height: 1.5,
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 0),
+                        child: Text(
+                          selectedCity.description,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ),
-
                     // Title
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 20),
@@ -240,9 +224,12 @@ class _CityListingPageState extends State<CityListingPage> {
 
                           return GestureDetector(
                             onTap: () {
-                              setState(() {
-                                selectedCityIndex = index;
-                              });
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CityDetailsPage(city: city),
+                                ),
+                              );
                             },
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 300),

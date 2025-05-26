@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/city.dart';
 import '../trips/trip_creation.dart';
+import '../models/user.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 
 class CityDetailsPage extends StatefulWidget {
   final City city;
@@ -13,10 +16,29 @@ class CityDetailsPage extends StatefulWidget {
 
 class _CityDetailsPageState extends State<CityDetailsPage> {
   bool isFavorite = false;
+  User? currentUserModel;
+  @override
+  void initState() {
+    super.initState();
+    loadUserData();
+  }
+
+  Future<void> loadUserData() async {
+    final user = fb_auth.FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (doc.exists) {
+        setState(() {
+          currentUserModel = User.fromMap(doc.data()!);
+          isFavorite = currentUserModel!.favourites.contains(widget.city.name);
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = Colors.white.withOpacity(0.1);
+    final cardColor = Colors.white.withOpacity(0.3);
 
     return Scaffold(
       body: Stack(
@@ -75,13 +97,36 @@ class _CityDetailsPageState extends State<CityDetailsPage> {
                             isFavorite ? Icons.favorite : Icons.favorite_border,
                             color: isFavorite ? Colors.red : Colors.white,
                           ),
-                          onPressed: () {
+                          onPressed: () async {
+                            final user = fb_auth.FirebaseAuth.instance.currentUser;
+
+                            if (user == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please log in to add to favorites.'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                              return;
+                            }
+
                             setState(() => isFavorite = !isFavorite);
+
+                            final userDocRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+                            if (isFavorite) {
+                              await userDocRef.update({
+                                'favourites': FieldValue.arrayUnion([widget.city.name]),
+                              });
+                            } else {
+                              await userDocRef.update({
+                                'favourites': FieldValue.arrayRemove([widget.city.name]),
+                              });
+                            }
+
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text(isFavorite
-                                    ? 'Added to favorites!'
-                                    : 'Removed from favorites'),
+                                content: Text(isFavorite ? 'Added to favorites!' : 'Removed from favorites'),
                                 duration: const Duration(seconds: 1),
                               ),
                             );

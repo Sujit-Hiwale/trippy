@@ -12,6 +12,7 @@ import 'theme.dart';
 import 'screens/home/start.dart';
 import 'screens/cities/cityListing.dart';
 import 'screens/cities/home.dart';
+import 'screens/home/footer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +36,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/init',
       routes: {
-        '/': (context) => const HomeScreen(),
+        '/': (context) => const NavigationScreen(),
+        '/trips': (context) => const HomeScreen(),
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignupScreen(),
         '/init': (context) => StartPage(),

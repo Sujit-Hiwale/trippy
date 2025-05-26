@@ -12,6 +12,29 @@ class ProfileScreen extends StatelessWidget {
     return doc.exists ? doc.data() as Map<String, dynamic> : null;
   }
 
+  Future<List<Map<String, dynamic>>> getFavouriteTrips(List<dynamic> favourites) async {
+    if (favourites.isEmpty) return [];
+
+    final citiesCollection = FirebaseFirestore.instance.collection('cities');
+    final futures = favourites.map((cityId) => citiesCollection.doc(cityId).get());
+    final cityDocs = await Future.wait(futures);
+
+    for (var doc in cityDocs) {
+      if (!doc.exists) {
+        print('City with ID ${doc.id} does not exist');
+      } else {
+        print('Found city: ${doc.id}');
+      }
+    }
+
+    return cityDocs.where((doc) => doc.exists).map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      data['id'] = doc.id;
+      return data;
+    }).toList();
+  }
+
+
   void _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
     Navigator.pushReplacementNamed(context, '/login');
@@ -63,6 +86,7 @@ class ProfileScreen extends StatelessWidget {
 
           final userData = snapshot.data!;
           final List<dynamic> connections = userData['connections'] ?? [];
+          final List<dynamic> favourites = userData['favourites'] ?? [];
 
           return Padding(
             padding: const EdgeInsets.all(24.0),
@@ -100,6 +124,98 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+
+                const SizedBox(height: 32),
+
+                // Favourite Trips Section
+                if (favourites.isNotEmpty) ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Favourite Trips',
+                      style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  FutureBuilder<List<Map<String, dynamic>>>(
+                    future: getFavouriteTrips(favourites),
+                    builder: (context, tripSnapshot) {
+                      if (tripSnapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (!tripSnapshot.hasData || tripSnapshot.data!.isEmpty) {
+                        return const Text('No favourite trips found.');
+                      }
+
+                      final trips = tripSnapshot.data!;
+
+                      final screenWidth = MediaQuery.of(context).size.width;
+                      final screenHeight = MediaQuery.of(context).size.height;
+
+                      return SizedBox(
+                        height: screenHeight * 0.3,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: trips.length,
+                          separatorBuilder: (context, index) => const SizedBox(width: 12),
+                          itemBuilder: (context, index) {
+                            final trip = trips[index];
+                            return Container(
+                              width: screenWidth * 0.5,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                color: theme.colorScheme.surfaceVariant,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                      child: trip['imageUrl'] != null && trip['imageUrl'] != ""
+                                          ? Image.network(
+                                        trip['imageUrl'],
+                                        fit: BoxFit.cover,
+                                      )
+                                          : Image.asset(
+                                        'assets/default_trip.png',
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      trip['name'] ?? 'Unnamed Trip',
+                                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ] else ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    'No favourite trips added.',
+                    style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                  ),
+                ],
+
                 const Spacer(),
                 SizedBox(
                   width: double.infinity,
