@@ -32,6 +32,10 @@ Trippy is a cross-platform mobile and web app built with Flutter that allows use
 
 ---
 
+## Website
+
+The website is openly accessible at https://sujit-hiwale.github.io/trippy/
+
 ## 📦 Installation Guide
 
 ### 🔧 Requirements
