@@ -83,7 +83,7 @@ class _TripSearchScreenState extends State<TripSearchScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Search Trips'),
+        title: const Text('Trippy'),
         backgroundColor: theme.colorScheme.primaryContainer,
         foregroundColor: theme.colorScheme.onPrimaryContainer,
       ),

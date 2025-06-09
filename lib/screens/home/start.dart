@@ -58,7 +58,7 @@ class StartPage extends StatelessWidget {
                   constraints: BoxConstraints(maxWidth: 200),
                   child: OutlinedButton(
                     onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/');
+                      Navigator.pushReplacementNamed(context, '/nav');
                     },
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(color: Colors.green),

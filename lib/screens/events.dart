@@ -33,7 +33,7 @@ class EventScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Upcoming Events'),
+        title: const Text('Trippy'),
         backgroundColor: theme.colorScheme.primaryContainer,
         foregroundColor: theme.colorScheme.onPrimaryContainer,
       ),
@@ -83,16 +83,16 @@ class EventCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.network(
-            imageUrl,
-            height: 180,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(
-              height: 180,
-              color: Colors.grey[300],
-              alignment: Alignment.center,
-              child: const Icon(Icons.image_not_supported, size: 40),
+          AspectRatio(
+            aspectRatio: 16 / 5,
+            child: Image(
+              image: AssetImage(imageUrl),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: Colors.grey[300],
+                alignment: Alignment.center,
+                child: const Icon(Icons.image_not_supported, size: 40),
+              ),
             ),
           ),
           Padding(

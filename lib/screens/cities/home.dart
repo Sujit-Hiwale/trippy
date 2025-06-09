@@ -8,7 +8,7 @@ class CityHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Top Cities')),
+      appBar: AppBar(title: const Text('Trippy'),centerTitle: true,),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: TopCitiesScrollView(),

@@ -100,7 +100,7 @@ class _TripChatScreenState extends State<TripChatScreen> {
               isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
                 Text(
-                  isMe ? username : "You",
+                  isMe ? "You" : username,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,

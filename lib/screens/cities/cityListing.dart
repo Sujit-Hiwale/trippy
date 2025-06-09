@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/city.dart';
@@ -14,13 +15,48 @@ class CityListingPage extends StatefulWidget {
 class _CityListingPageState extends State<CityListingPage> {
   int selectedIndex = 0;
   int selectedCityIndex = 0;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  User? _user;
+
+  @override
+  void initState() {
+    super.initState();
+    _user = _auth.currentUser;
+  }
+
+  void _logout() async {
+    await _auth.signOut();
+    setState(() {
+      _user = null;
+    });
+    Navigator.pushReplacementNamed(context, '/');
+  }
+
+  void _handleProfileAction() {
+    if (_user == null) {
+      Navigator.pushNamed(context, '/login');
+    } else {
+      Navigator.pushNamed(context, '/profile');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Explore Cities'),
-        backgroundColor: Colors.black87,
+        title: const Text('Trippy'),
+        backgroundColor: Colors.black,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: _handleProfileAction,
+          ),
+          if (_user != null)
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: _logout,
+            ),
+        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('cities').snapshots(),
@@ -35,15 +71,22 @@ class _CityListingPageState extends State<CityListingPage> {
             return const Center(child: Text('No cities available'));
           }
 
-          final cities = snapshot.data!.docs
+          final allCities = snapshot.data!.docs
               .map((doc) => City.fromFirestore(doc.data() as Map<String, dynamic>, doc.id))
               .toList();
 
-          final topCities = cities.length > 10 ? cities.sublist(0, 10) : cities;
+          // Top 10 cities sorted by travelScore DESC
+          final topCities = List<City>.from(allCities)
+            ..sort((a, b) => b.travelScore.compareTo(a.travelScore));
+          final limitedTopCities = topCities.take(10).toList();
+
+          // Cards above (4 cities) sorted by name
+          final nameSortedCities = List<City>.from(allCities)
+            ..sort((a, b) => a.name.compareTo(b.name));
 
           List<City> visibleCities = List.generate(4, (i) {
-            int idx = (selectedIndex + i) % topCities.length;
-            return topCities[idx];
+            int idx = (selectedIndex + i) % nameSortedCities.length;
+            return nameSortedCities[idx];
           });
 
           final selectedCity = visibleCities[0];
@@ -82,7 +125,8 @@ class _CityListingPageState extends State<CityListingPage> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => CityDetailsPage(city: selectedCity),
+                                            builder: (context) =>
+                                                CityDetailsPage(city: selectedCity),
                                           ),
                                         );
                                       },
@@ -141,7 +185,8 @@ class _CityListingPageState extends State<CityListingPage> {
                                             onTap: () {
                                               setState(() {
                                                 selectedIndex =
-                                                    (selectedIndex + i + 1) % topCities.length;
+                                                    (selectedIndex + i + 1) %
+                                                        nameSortedCities.length;
                                               });
                                             },
                                             child: Container(
@@ -186,14 +231,14 @@ class _CityListingPageState extends State<CityListingPage> {
                         child: Text(
                           selectedCity.description,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
                           ),
                         ),
                       ),
                     ),
-                    // Title
+
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       color: Colors.black,
@@ -209,17 +254,17 @@ class _CityListingPageState extends State<CityListingPage> {
                       ),
                     ),
 
-                    // Horizontal City List
+                    // Horizontal City List - Top 10 by travelScore
                     Container(
                       height: 240,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: cities.length,
+                        itemCount: limitedTopCities.length,
                         separatorBuilder: (_, __) => const SizedBox(width: 16),
                         itemBuilder: (context, index) {
-                          final city = cities[index];
+                          final city = limitedTopCities[index];
                           final isSelected = index == selectedCityIndex;
 
                           return GestureDetector(

@@ -53,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
             "https://static.vecteezy.com/system/resources/previews/023/957/756/non_2x/website-travel-trip-header-or-banner-design-vector.jpg",
             fit: BoxFit.cover,
           ),
-          title: const Text("Explore Trips"),
+          title: const Text("Trippy"),
           actions: [
             IconButton(
               icon: const Icon(Icons.person),

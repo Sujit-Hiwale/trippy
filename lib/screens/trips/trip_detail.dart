@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:trippy/theme.dart';
@@ -117,13 +118,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     final user = FirebaseAuth.instance.currentUser;
     final currentUserEmail = user?.email;
     final isUserInTrip = trip.teamMembers.contains(currentUserEmail);
-
+    final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       body: Stack(
         children: [
           // Bigger image section
           SizedBox(
-            height: 400,
+            height: screenHeight * 0.73,
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -190,114 +191,142 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
           ),
 
           DraggableScrollableSheet(
-            initialChildSize: 0.62,
-            minChildSize: 0.62,
+            initialChildSize: 0.3,
+            minChildSize: 0.3,
             maxChildSize: 1.0,
-            builder: (_, controller) => Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.background,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-              ),
-              padding: const EdgeInsets.all(20),
-              child: ListView(
-                controller: controller,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 50,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
+            builder: (context, scrollController) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Theme
+                      .of(context)
+                      .colorScheme
+                      .background,
+                  borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(30)),
+                ),
+                padding: const EdgeInsets.all(20),
+                child: ScrollConfiguration(
+                  behavior: const MaterialScrollBehavior().copyWith(
+                    dragDevices: {
+                      PointerDeviceKind.touch,
+                      PointerDeviceKind.mouse,
+                      // Allow mouse dragging & scrolling
+                    },
                   ),
-                  const SizedBox(height: 20),
-
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                  child: ListView(
+                    controller: scrollController,
                     children: [
-                      Chip(
-                        avatar: const Icon(Icons.calendar_today, size: 18),
-                        label: Text('Date: ${trip.dateOfGoing.toLocal().toString().split(' ')[0]}',
-                            style: const TextStyle(fontSize: 13)),
+                      Center(
+                        child: Container(
+                          width: 50,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
                       ),
-                      Chip(
-                        avatar: const Icon(Icons.timelapse, size: 18),
-                        label: Text('Duration: ${trip.duration} ${trip.durationUnit}',
-                            style: const TextStyle(fontSize: 13)),
-                      ),
-                      Chip(
-                        avatar: const Icon(Icons.category, size: 18),
-                        label: Text('Type: ${trip.type ?? 'Adventure'}',
-                            style: const TextStyle(fontSize: 13)),
+                      const SizedBox(height: 20),
+
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          Chip(
+                            avatar: const Icon(Icons.calendar_today, size: 18),
+                            label: Text('Date: ${trip.dateOfGoing
+                                .toLocal()
+                                .toString()
+                                .split(' ')[0]}',
+                                style: const TextStyle(fontSize: 13)),
+                          ),
+                          Chip(
+                            avatar: const Icon(Icons.timelapse, size: 18),
+                            label: Text('Duration: ${trip.duration} ${trip
+                                .durationUnit}',
+                                style: const TextStyle(fontSize: 13)),
+                          ),
+                          Chip(
+                            avatar: const Icon(Icons.category, size: 18),
+                            label: Text('Type: ${trip.type ?? 'Adventure'}',
+                                style: const TextStyle(fontSize: 13)),
+                          ),
+
+                        ],
                       ),
 
+                      const SizedBox(height: 20),
+                      Text(trip.description ?? "No description provided.",
+                          style: Theme
+                              .of(context)
+                              .textTheme
+                              .bodyLarge
+                              ?.copyWith(fontSize: 15)),
+
+                      const SizedBox(height: 20),
+                      isUserInTrip
+                          ? ElevatedButton.icon(
+                        onPressed: () => _confirmCancelTrip(context),
+                        icon: const Icon(Icons.cancel_outlined),
+                        label: const Text("Cancel Trip"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                      )
+                          : ElevatedButton.icon(
+                        onPressed: () => _confirmJoinTrip(context),
+                        icon: const Icon(Icons.check_circle_outline),
+                        label: const Text("Join Trip"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+                      const Text("Team Members", style: TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 10),
+
+                      ...trip.teamMembers.map((member) {
+                        final profilePic = userProfilePics[member];
+                        final username = usernames[member];
+                        final isCurrentUser = member == currentUserEmail;
+                        final isAdmin = trip.organizerEmail == member;
+
+                        return Card(
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage: profilePic != null &&
+                                  profilePic.isNotEmpty
+                                  ? AssetImage(profilePic)
+                                  : const AssetImage(
+                                  "assets/avatars/noAvatar.png") as ImageProvider,
+                            ),
+                            title: Text(
+                              isCurrentUser
+                                  ? "${username ?? member} (You)"
+                                  : isAdmin
+                                  ? "${username ?? member} (Admin)"
+                                  : username ?? member,
+                            ),
+                          ),
+                        );
+                      }),
                     ],
                   ),
-
-                  const SizedBox(height: 20),
-                  Text(trip.description ?? "No description provided.",
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 15)),
-
-                  const SizedBox(height: 20),
-                  isUserInTrip
-                      ? ElevatedButton.icon(
-                    onPressed: () => _confirmCancelTrip(context),
-                    icon: const Icon(Icons.cancel_outlined),
-                    label: const Text("Cancel Trip"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  )
-                      : ElevatedButton.icon(
-                    onPressed: () => _confirmJoinTrip(context),
-                    icon: const Icon(Icons.check_circle_outline),
-                    label: const Text("Join Trip"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-                  const Text("Team Members", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-
-                  ...trip.teamMembers.map((member) {
-                    final profilePic = userProfilePics[member];
-                    final username = usernames[member];
-                    final isCurrentUser = member == currentUserEmail;
-                    final isAdmin = trip.organizerEmail == member;
-
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 6),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: profilePic != null && profilePic.isNotEmpty
-                              ? NetworkImage(profilePic)
-                              : const AssetImage("assets/avatars/noAvatar.png") as ImageProvider,
-                        ),
-                        title: Text(
-                          isCurrentUser
-                              ? "${username ?? member} (You)"
-                              : isAdmin
-                              ? "${username ?? member} (Admin)"
-                              : username ?? member,
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-          ),
+                ),
+              );
+            }
+          )
         ],
       ),
     );

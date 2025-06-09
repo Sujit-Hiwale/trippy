@@ -14,6 +14,8 @@ import 'screens/cities/cityListing.dart';
 import 'screens/cities/home.dart';
 import 'screens/home/footer.dart';
 import 'screens/auth/connections.dart';
+import 'screens/search.dart';
+import 'screens/events.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +32,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Trippy',
-      //theme: ThemeData(primarySwatch: Colors.blue),
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
@@ -38,12 +39,15 @@ class MyApp extends StatelessWidget {
       initialRoute: '/init',
       routes: {
         '/': (context) => const NavigationScreen(),
-        '/trips': (context) => const HomeScreen(),
+        '/trips': (context) => const NavigationScreen(initialIndex: 3),
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignupScreen(),
         '/init': (context) => StartPage(),
-        '/cities': (context) => const CityListingPage(),
+        '/cities': (context) => const NavigationScreen(initialIndex: 0),
         '/connections': (context) => const ConnectionsScreen(),
+        '/search': (context) => const NavigationScreen(initialIndex: 1),
+        '/events': (context) => const NavigationScreen(initialIndex: 2),
+        '/nav': (context) => const NavigationScreen(),
       },
       onGenerateRoute: (settings) {
         final user = FirebaseAuth.instance.currentUser;

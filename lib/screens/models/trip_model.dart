@@ -47,4 +47,22 @@ class Trip {
       'type': type,
     };
   }
+  factory Trip.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Trip(
+      id: doc.id,
+      name: data['name'] ?? '',
+      destination: data['destination'] ?? '',
+      imageUrl: data['imageUrl'] ?? '',
+      dateOfGoing: (data['dateOfGoing'] as Timestamp).toDate(),
+      location: data['location'] ?? '',
+      organizerId: data['organizerId'] ?? '',
+      organizerEmail: data['organizerEmail'] ?? '',
+      duration: data['duration'] ?? 0,
+      durationUnit: data['durationUnit'] ?? '',
+      teamMembers: List<String>.from(data['teamMembers'] ?? []),
+      description: data['description'],
+      type: data['type'] ?? 'Adventure',
+    );
+  }
 }

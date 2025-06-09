@@ -6,14 +6,16 @@ import 'package:trippy/screens/search.dart';
 import '../cities/cityListing.dart';
 
 class NavigationScreen extends StatefulWidget {
-  const NavigationScreen({Key? key}) : super(key: key);
+  final int initialIndex;
+
+  const NavigationScreen({Key? key, this.initialIndex = 0}) : super(key: key);
 
   @override
   State<NavigationScreen> createState() => _NavigationScreenState();
 }
 
 class _NavigationScreenState extends State<NavigationScreen> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
 
   final List<Widget> _pages = [
     const CityListingPage(),
@@ -36,16 +38,32 @@ class _NavigationScreenState extends State<NavigationScreen> {
     Icons.card_travel,
   ];
 
+  final List<String> _routes = [
+    '/cities',
+    '/search',
+    '/events',
+    '/trips',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
+
   void _onTap(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (_selectedIndex != index) {
+      Navigator.pushReplacementNamed(context, _routes[index]);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onTap,
